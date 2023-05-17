@@ -5,7 +5,6 @@ Install/activate systemd-journald and possibly deactivate other syslog daemons
 
 To run solo:
 ```
-ansible-galaxy install -r requirements.yml
 ansible-playbook -i localhost, journald.yml
 ```
 
@@ -15,7 +14,8 @@ ansible-playbook -i localhost, journald.yml
 
 ```
 ---
-- hosts: '*'
+- name: Handle systemd-journald
+  hosts: '*'
   roles:
     - lihas_journald
 ...
