@@ -1,0 +1,58 @@
+---
+- name: Populate service facts
+  ansible.builtin.service_facts:
+  when: ansible_facts.services is not defined
+- name: Handle systemd
+  when: >-
+    ansible_facts.services["systemd-journald.service"] is defined and ansible_facts.services["systemd-journald.service"] is defined and
+    ansible_facts.services["systemd-journald.service"]["state"] == "running" and ansible_facts.services["systemd-journald.service"]["source"] == "systemd"
+  block:
+    - name: Create /var/log/journal
+      ansible.builtin.file:
+        path: "/var/log/journal"
+        state: "directory"
+        mode: '2755'
+        owner: "root"
+        group: "systemd-journal"
+      notify: Reload systemd-journald
+    - name: Limit journald filesize
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/journald.conf
+        state: present
+        line: "SystemMaxUse={{ lihas_systemd_journald_max_use | default('2G') }}"
+        regexp: '.*SystemMaxUse=.*'
+      notify: Reload systemd-journald
+    - name: Remove rsyslogd
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: absent
+      with_list:
+        - rsyslog
+        - syslog-ng-core
+        - syslog-ng
+        - inetutils-syslogd
+      when: lihas_syslog_remove
+    - name: Find old logfiles
+      ansible.builtin.find:
+        paths: /var/log
+        file_type: file
+        use_regex: true
+        patterns:
+          - "^syslog.*"
+          - "^messages.*"
+          - "^auth.*"
+          - "^cron.log.*"
+          - "^daemon.log.*"
+          - "^kern.log.*"
+          - "^lpr.log.*"
+          - "^mail.*"
+          - "^user.log.*"
+      register: logfiles
+      when: lihas_syslog_remove_logs
+    - name: Remove old logfiles
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: "absent"
+      with_list: "{{ logfiles.files }}"
+      when: lihas_syslog_remove_logs
+...

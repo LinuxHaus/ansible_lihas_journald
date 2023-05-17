@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  author: lihas@lihas.de
+  namespace: lihas
+  description: activate systemd-journald and possibly deactivate other syslog implementations
+  license: GPL-3.0-or-later
+  galaxy_tags: []
+  min_ansible_version: '2.9'
+  platforms:
+    - name: Debian
+      versions:
+        - all
+dependencies: []

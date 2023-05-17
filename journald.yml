@@ -1,0 +1,6 @@
+---
+- name: Journald handling
+  hosts: '*'
+  roles:
+    - lihas_journald
+...
